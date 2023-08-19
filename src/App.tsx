@@ -1,26 +1,39 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from './store/hooks';
+import { moveBelow, updateBoard } from './store';
+import { createBoard } from './utils/createBoard';
+import Board from './components/Board';
+import { checkforRowofFour, checkforRowofThree, isColumnOfThree, isColumnOffFour } from './utils/formulaCheckLogic';
+import { formulaForColumnofFour, formulaForColumnofThree, generateInvalidMoves } from './utils/formulas';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+  const dispatch=useAppDispatch();
+  const board=useAppSelector(({candyCrush:{board}})=>board);
+  const boardSize=useAppSelector(({candyCrush:{boardSize}})=>boardSize);
+
+  useEffect(()=>{
+    dispatch(updateBoard(createBoard(boardSize)));
+    // console.log(createBoard(boardSize));
+  },[boardSize,dispatch])
+
+  useEffect(()=>{
+    const timeout=setTimeout(()=>{
+      const newBoard=[...board];
+      isColumnOffFour(newBoard,boardSize,formulaForColumnofFour(boardSize));
+      checkforRowofFour(newBoard,boardSize,generateInvalidMoves(boardSize,true));
+      isColumnOfThree(newBoard,boardSize,formulaForColumnofThree(boardSize))
+      checkforRowofThree(newBoard,boardSize,generateInvalidMoves(boardSize,true));
+      dispatch(updateBoard(newBoard));
+      dispatch(moveBelow());
+    },150);
+    return ()=>clearInterval(timeout);
+  },[board,boardSize,dispatch])
+  return <div className='flex items-center justify-center h-screen'>
+      <Board/>
     </div>
-  );
+  
 }
 
-export default App;
+export default App
+
+
